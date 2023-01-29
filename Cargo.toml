@@ -2,6 +2,10 @@
 name = "marky"
 version = "0.1.0"
 edition = "2021"
+description = "Markdown to HTML converter with beautiful themes"
+license = "MIT"
+repository = "https://github.com/metafates/marky"
+authors = ["metafates"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
