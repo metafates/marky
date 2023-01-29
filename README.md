@@ -25,6 +25,12 @@ Options:
   -V, --version              Print version
 ```
 
+## Install
+
+```bash
+cargo install marky
+```
+
 ## Build
 
 ```bash
