@@ -1,0 +1,17 @@
+[package]
+name = "marky"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.1.4", features = ["cargo", "derive", "env"] }
+colored = "2.0.0"
+const_format = "0.2.30"
+dirs = "4.0.0"
+markdown = "1.0.0-alpha.5"
+minifier = "0.2.2"
+serde = { version = "1.0.152", features = ["derive"] }
+toml = "0.7.0"
+url = { version = "2.3.1", features = ["serde"] }
