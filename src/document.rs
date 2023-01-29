@@ -1,37 +1,49 @@
+use crate::included::STATIC_DIR;
 use crate::themes::Theme;
 
 pub struct Document {
     text: String,
 }
 
+pub struct RenderOptions {
+    pub highlight: bool,
+    pub theme: Theme,
+}
+
 impl Document {
-    pub fn to_html(
-        &self,
-        theme: &Theme,
-        highlight_code: bool,
-    ) -> Result<String, Box<dyn std::error::Error>> {
-        const HIGHLIGHTER: &str = r#"
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    pub fn render(&self, options: &RenderOptions) -> Result<String, Box<dyn std::error::Error>> {
+        let highlighter: String = format!(
+            r#"
+    <style>{style}</style>
+    <script>{script}</script>
     <script>hljs.highlightAll();</script>
-        "#;
+        "#,
+            style = STATIC_DIR
+                .get_file("vendor/highlight.min.css")
+                .unwrap()
+                .contents_utf8()
+                .unwrap(),
+            script = STATIC_DIR
+                .get_file("vendor/highlight.min.js")
+                .unwrap()
+                .contents_utf8()
+                .unwrap(),
+        );
 
         let html = format!(
             r#"
-<!doctype html>
-
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 {highlight}
 
-    <title>{title}</title>
+<title>{title}</title>
 
-    <style>
-        {style}
-    </style>
+<style>
+{style}
+</style>
 </head>
 
 <body>
@@ -39,9 +51,13 @@ impl Document {
 </body>
 </html>
 "#,
-            highlight = if highlight_code { HIGHLIGHTER } else { "" },
+            highlight = if options.highlight {
+                highlighter
+            } else {
+                String::new()
+            },
             title = self.title().unwrap_or("Document".into()),
-            style = theme.resolve()?,
+            style = options.theme.resolve()?,
             body = markdown::to_html(self.text.as_str()),
         );
 

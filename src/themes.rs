@@ -4,23 +4,6 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
-macro_rules! include_theme {
-    ($path:expr) => {
-        Theme {
-            name: std::path::Path::new($path)
-                .file_stem()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string(),
-            inline: Some(include_str!($path).to_string()),
-
-            path: None,
-            url: None,
-        }
-    };
-}
-
 #[derive(serde::Deserialize, Clone)]
 pub struct Theme {
     pub name: String,
@@ -95,7 +78,7 @@ impl Theme {
 
 impl Default for Theme {
     fn default() -> Self {
-        include_theme!("themes/air.css")
+        Themes::default().themes.first().unwrap().clone()
     }
 }
 
@@ -114,15 +97,26 @@ impl Default for Themes {
     fn default() -> Self {
         let mut themes = Vec::new();
 
-        for theme in [
-            include_theme!("themes/air.css"),
-            include_theme!("themes/modest.css"),
-            include_theme!("themes/retro.css"),
-            include_theme!("themes/splendor.css"),
-        ]
-        .into_iter()
-        {
-            themes.push(theme);
+        let themes_dir = crate::included::STATIC_DIR.get_dir("themes").unwrap();
+
+        for entry in themes_dir.entries().into_iter() {
+            if let Some(file) = entry.as_file() {
+                let name = file
+                    .path()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                let inline = Some(file.contents_utf8().unwrap().to_string());
+
+                themes.push(Theme {
+                    name,
+                    inline,
+                    path: None,
+                    url: None,
+                })
+            }
         }
 
         Themes { themes }

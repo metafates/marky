@@ -1,11 +1,13 @@
 use clap::{ArgGroup, Parser};
 use colored::Colorize;
+use notify::Watcher;
 use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 use std::path::PathBuf;
 
 mod document;
+mod included;
 mod log;
 mod paths;
 mod themes;
@@ -39,8 +41,11 @@ struct Cli {
     #[arg(short, long, help = "Output file")]
     out: Option<PathBuf>,
 
-    #[arg(short = 'h', long, help = "Enable syntax highligting")]
+    #[arg(short = 'H', long, help = "Enable syntax highligting")]
     syntax_highlighting: bool,
+
+    #[arg(short, long, help = "Enable file watcher")]
+    watch: bool,
 }
 
 impl Cli {
@@ -96,13 +101,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
+    let options = document::RenderOptions {
+        theme: cli.get_theme()?,
+        highlight: cli.syntax_highlighting,
+    };
+
+    if cli.watch {
+        if cli.path.is_none() {
+            error!("watcher needs a file to watch");
+            std::process::exit(1);
+        }
+
+        watch(&cli.path.unwrap(), cli.out.as_ref(), &options)?;
+
+        return Ok(());
+    }
+
     let contents = cli.get_markdown()?;
-    let theme = cli.get_theme()?;
-
     let doc = document::Document::new(&contents);
-    let html = doc.to_html(&theme, cli.syntax_highlighting)?;
+    let html = doc.render(&options)?;
 
-    if let Some(out_path) = cli.out {
+    if let Some(out_path) = &cli.out {
         std::fs::write(out_path, html)?;
     } else {
         println!("{}", html);
@@ -125,4 +144,62 @@ fn read_path(path: &PathBuf) -> io::Result<String> {
     file.read_to_string(&mut buffer)?;
 
     Ok(buffer)
+}
+
+fn watch(
+    path: &PathBuf,
+    output: Option<&PathBuf>,
+    options: &document::RenderOptions,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let path = path.clone();
+    let output_path = match output {
+        Some(path) => path.clone(),
+        None => {
+            let mut path = path.clone();
+            path.set_extension("html");
+            path
+        }
+    };
+
+    info!(
+        "watching {} -> {}",
+        path.display().to_string().cyan(),
+        output_path.display().to_string().cyan()
+    );
+
+    let (tx, rx) = std::sync::mpsc::channel();
+    let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default())?;
+
+    watcher.watch(path.as_path(), notify::RecursiveMode::NonRecursive)?;
+
+    for res in rx {
+        match res {
+            Ok(event) => {
+                if event.kind.is_modify() {
+                    let read_res = read_path(&path);
+
+                    if let Ok(contents) = read_res {
+                        let execution_start = std::time::Instant::now();
+                        let doc = document::Document::new(&contents);
+                        let html = doc.render(&options)?;
+                        let execution_duration = execution_start.elapsed();
+
+                        match std::fs::write(&output_path, html.as_str()) {
+                            Ok(_) => info!(
+                                "{} updated, wrote {}B to {} in {}ms",
+                                path.display(),
+                                html.len(),
+                                output_path.display(),
+                                execution_duration.as_millis()
+                            ),
+                            Err(e) => error!("{}", e.to_string()),
+                        }
+                    }
+                }
+            }
+            Err(e) => error!("{}", e.to_string()),
+        }
+    }
+
+    Ok(())
 }
