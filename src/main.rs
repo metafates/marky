@@ -19,11 +19,16 @@ mod themes;
         .args(&["path", "string", "stdin"])
         .conflicts_with("info")
 ))]
+#[clap(group(
+    ArgGroup::new("output")
+        .args(&["out", "stdout"])
+        .conflicts_with("info")
+))]
 struct Cli {
     #[arg(short, long, help = "Theme to use")]
     theme: Option<String>,
 
-    #[arg(short, long, help = "Read input from stdin")]
+    #[arg(long, help = "Read input from stdin")]
     stdin: bool,
 
     #[arg(help = "Read input from file")]
@@ -41,11 +46,17 @@ struct Cli {
     #[arg(short, long, help = "Output file")]
     out: Option<PathBuf>,
 
+    #[arg(long, help = "Output to stdout")]
+    stdout: bool,
+
     #[arg(short = 'H', long, help = "Enable syntax highligting")]
     syntax_highlighting: bool,
 
     #[arg(short, long, help = "Enable file watcher")]
     watch: bool,
+
+    #[arg(short = 'O', long, help = "Open output file in the default app")]
+    open: bool,
 }
 
 impl Cli {
@@ -62,8 +73,7 @@ impl Cli {
             return read_stdin();
         }
 
-        error!("no input is given, see --help");
-        std::process::exit(1);
+        die!("no input is given, see {}", "--help".yellow());
     }
 
     pub fn get_theme(&self) -> Result<themes::Theme, Box<dyn std::error::Error>> {
@@ -73,10 +83,7 @@ impl Cli {
 
                 match available.by_name(name) {
                     Some(theme) => Ok(theme),
-                    None => {
-                        error!("unknown theme '{}'", name);
-                        std::process::exit(1);
-                    }
+                    None => die!("unknown theme {}", name.cyan()),
                 }
             }
             None => Ok(themes::Theme::default()),
@@ -106,25 +113,54 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         highlight: cli.syntax_highlighting,
     };
 
+    info!("using theme {}", options.theme.name.cyan());
+    if options.highlight {
+        info!("code syntax highlighting is enabled");
+    }
+
+    let out = {
+        if let Some(out) = &cli.out {
+            out.clone()
+        } else if let Some(path) = &cli.path {
+            path.with_extension("html")
+        } else {
+            PathBuf::new().with_file_name("out").with_extension("html")
+        }
+    };
+
     if cli.watch {
         if cli.path.is_none() {
-            error!("watcher needs a file to watch");
-            std::process::exit(1);
+            die!("watcher needs a file to watch");
         }
 
-        watch(&cli.path.unwrap(), cli.out.as_ref(), &options)?;
+        watch(&cli.path.unwrap(), &out, &options)?;
 
         return Ok(());
     }
 
+    let execution_start = std::time::Instant::now();
     let contents = cli.get_markdown()?;
     let doc = document::Document::new(&contents);
     let html = doc.render(&options)?;
+    let execution_duration = execution_start.elapsed();
 
-    if let Some(out_path) = &cli.out {
-        std::fs::write(out_path, html)?;
-    } else {
+    let formatted_millis = format!("{}ms", execution_duration.as_millis()).yellow();
+
+    if cli.stdout {
         println!("{}", html);
+        info!("took {}", formatted_millis);
+    } else {
+        std::fs::write(&out, &html)?;
+        info!(
+            "wrote {}B to {} in {}",
+            html.len(),
+            &out.display(),
+            formatted_millis,
+        );
+
+        if cli.open {
+            open::that(&out)?;
+        }
     }
 
     Ok(())
@@ -148,23 +184,15 @@ fn read_path(path: &PathBuf) -> io::Result<String> {
 
 fn watch(
     path: &PathBuf,
-    output: Option<&PathBuf>,
+    output: &PathBuf,
     options: &document::RenderOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let path = path.clone();
-    let output_path = match output {
-        Some(path) => path.clone(),
-        None => {
-            let mut path = path.clone();
-            path.set_extension("html");
-            path
-        }
-    };
 
     info!(
         "watching {} -> {}",
         path.display().to_string().cyan(),
-        output_path.display().to_string().cyan()
+        output.display().to_string().cyan()
     );
 
     let (tx, rx) = std::sync::mpsc::channel();
@@ -175,27 +203,31 @@ fn watch(
     for res in rx {
         match res {
             Ok(event) => {
-                if event.kind.is_modify() {
-                    let read_res = read_path(&path);
+                use notify::{event::DataChange, event::ModifyKind, EventKind};
+                match event.kind {
+                    EventKind::Modify(ModifyKind::Data(DataChange::Content)) => {
+                        let read_res = read_path(&path);
 
-                    if let Ok(contents) = read_res {
-                        let execution_start = std::time::Instant::now();
-                        let doc = document::Document::new(&contents);
-                        let html = doc.render(&options)?;
-                        let execution_duration = execution_start.elapsed();
+                        if let Ok(contents) = read_res {
+                            let execution_start = std::time::Instant::now();
+                            let doc = document::Document::new(&contents);
+                            let html = doc.render(&options)?;
+                            let execution_duration = execution_start.elapsed();
 
-                        match std::fs::write(&output_path, html.as_str()) {
-                            Ok(_) => info!(
-                                "{} updated, wrote {}B to {} in {}ms",
-                                path.display(),
-                                html.len(),
-                                output_path.display(),
-                                execution_duration.as_millis()
-                            ),
-                            Err(e) => error!("{}", e.to_string()),
+                            match std::fs::write(&output, html.as_str()) {
+                                Ok(_) => info!(
+                                    "{} updated, wrote {}B to {} in {}",
+                                    path.display(),
+                                    html.len(),
+                                    output.display(),
+                                    format!("{}ms", execution_duration.as_millis()).yellow(),
+                                ),
+                                Err(e) => error!("{}", e.to_string()),
+                            }
                         }
                     }
-                }
+                    _ => {}
+                };
             }
             Err(e) => error!("{}", e.to_string()),
         }

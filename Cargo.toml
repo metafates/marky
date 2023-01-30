@@ -1,6 +1,6 @@
 [package]
 name = "marky"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Markdown to HTML converter with beautiful themes"
 license = "MIT"
@@ -17,6 +17,7 @@ include_dir = "0.7.3"
 markdown = "1.0.0-alpha.5"
 minifier = "0.2.2"
 notify = "5.1.0"
+open = "3.2.0"
 serde = { version = "1.0.152", features = ["derive"] }
 toml = "0.7.0"
 url = { version = "2.3.1", features = ["serde"] }
