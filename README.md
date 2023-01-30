@@ -7,6 +7,8 @@ Converts Markdown `.md` documents into good-looking HTML
 ## Usage
 
 ```
+Markdown to HTML converter with beautiful themes
+
 Usage: marky [OPTIONS] [PATH]
 
 Arguments:
@@ -14,13 +16,15 @@ Arguments:
 
 Options:
   -t, --theme <THEME>        Theme to use
-  -s, --stdin                Read input from stdin
+      --stdin                Read input from stdin
       --string <STRING>      Read input from string
   -l, --list-themes          List available themes
       --where-config         Print config path
   -o, --out <OUT>            Output file
-  -H, --syntax-highlighting  Enable syntax highlighting
+      --stdout               Output to stdout
+  -H, --syntax-highlighting  Enable syntax highligting
   -w, --watch                Enable file watcher
+  -O, --open                 Open output file in the default app
   -h, --help                 Print help
   -V, --version              Print version
 ```
