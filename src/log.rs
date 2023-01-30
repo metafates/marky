@@ -9,6 +9,16 @@ macro_rules! error {
 }
 
 #[macro_export]
+macro_rules! success {
+    () => {
+        eprintln!("{}", "success".green())
+    };
+    ($($arg:tt)*) => {
+        eprintln!("{} {}", "success:".green(), format!($($arg)*))
+    };
+}
+
+#[macro_export]
 macro_rules! die {
     () => {{
         std::process::exit(1);

@@ -152,6 +152,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         math: cli.all || cli.math,
         highlight: cli.all || cli.highlight,
         diagrams: cli.all || cli.diagrams,
+        pdf: cli.pdf,
     };
 
     info!("Using theme {}", options.theme.name.cyan());
@@ -194,15 +195,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let execution_start = std::time::Instant::now();
     let md = cli.get_markdown()?;
     let doc = document::Document::new(&md);
-    let html = doc.render(&options)?;
-
-    let buffer = {
-        if cli.pdf {
-            pdf::html_to_pdf(html.as_str(), None)?
-        } else {
-            Vec::from(html.clone())
-        }
-    };
+    let buffer = doc.render(&options)?;
 
     let execution_duration = execution_start.elapsed();
     let formatted_millis = format!("{}ms", execution_duration.as_millis()).yellow();
@@ -213,7 +206,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("took {}", formatted_millis);
     } else {
         std::fs::write(&out, &buffer)?;
-        info!(
+        success!(
             "wrote {}B to {} in {}",
             &buffer.len(),
             &out.display(),
@@ -252,7 +245,7 @@ fn watch(
     let path = path.clone();
 
     info!(
-        "watching {} -> {}",
+        "watching {} --> {}",
         path.display().to_string().cyan(),
         output.display().to_string().cyan()
     );
@@ -273,14 +266,14 @@ fn watch(
                         if let Ok(contents) = read_res {
                             let execution_start = std::time::Instant::now();
                             let doc = document::Document::new(&contents);
-                            let html = doc.render(&options)?;
+                            let buffer = doc.render(&options)?;
                             let execution_duration = execution_start.elapsed();
 
-                            match std::fs::write(&output, html.as_str()) {
-                                Ok(_) => info!(
+                            match std::fs::write(&output, &buffer) {
+                                Ok(_) => success!(
                                     "{} updated, wrote {}B to {} in {}",
                                     path.display(),
-                                    html.len(),
+                                    buffer.len(),
                                     output.display(),
                                     format!("{}ms", execution_duration.as_millis()).yellow(),
                                 ),

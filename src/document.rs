@@ -1,4 +1,5 @@
 use crate::included::VENDOR_DIR;
+use crate::pdf;
 use crate::themes::Theme;
 
 pub struct Document {
@@ -10,10 +11,11 @@ pub struct RenderOptions {
     pub highlight: bool,
     pub math: bool,
     pub diagrams: bool,
+    pub pdf: bool,
 }
 
 impl Document {
-    pub fn render(&self, options: &RenderOptions) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn render(&self, options: &RenderOptions) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
         let markdown_options = markdown::Options {
             parse: markdown::ParseOptions {
                 constructs: markdown::Constructs {
@@ -100,7 +102,15 @@ impl Document {
             body = body,
         );
 
-        Ok(html)
+        let bytes: Vec<u8> = {
+            if options.pdf {
+                pdf::html_to_pdf(html.as_str(), None)?
+            } else {
+                html.into_bytes()
+            }
+        };
+
+        Ok(bytes)
     }
 
     pub fn new(text: &str) -> Self {
