@@ -1,4 +1,5 @@
-use clap::{ArgGroup, Parser};
+use clap::{ArgGroup, Command, CommandFactory, Parser, ValueHint};
+use clap_complete::{Generator, Shell};
 use colored::Colorize;
 use notify::Watcher;
 use std::fs::File;
@@ -13,7 +14,7 @@ mod paths;
 mod themes;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
+#[command(name = "marky", author, version, about, long_about = None)]
 #[clap(group(
     ArgGroup::new("input")
         .args(&["path", "string", "stdin"])
@@ -25,13 +26,16 @@ mod themes;
         .conflicts_with("info")
 ))]
 struct Cli {
+    #[arg(long = "completion", value_enum)]
+    generator: Option<Shell>,
+
     #[arg(short, long, help = "Theme to use")]
     theme: Option<String>,
 
     #[arg(long, help = "Read input from stdin")]
     stdin: bool,
 
-    #[arg(help = "Read input from file")]
+    #[arg(help = "Read input from file", value_hint = ValueHint::FilePath)]
     path: Option<PathBuf>,
 
     #[arg(long, help = "Read input from string")]
@@ -43,20 +47,27 @@ struct Cli {
     #[arg(long, group = "info", help = "Print config path")]
     where_config: bool,
 
-    #[arg(short, long, help = "Output file")]
+    #[arg(short, long, help = "Output file", value_hint = ValueHint::FilePath)]
     out: Option<PathBuf>,
 
     #[arg(long, help = "Output to stdout")]
     stdout: bool,
 
     #[arg(short = 'H', long, help = "Enable syntax highligting")]
-    syntax_highlighting: bool,
+    highlight: bool,
+
+    #[arg(short = 'M', long, help = "Enable math rendering (LaTeX)")]
+    math: bool,
 
     #[arg(short, long, help = "Enable file watcher")]
     watch: bool,
 
     #[arg(short = 'O', long, help = "Open output file in the default app")]
     open: bool,
+}
+
+fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    clap_complete::generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout())
 }
 
 impl Cli {
@@ -83,7 +94,15 @@ impl Cli {
 
                 match available.by_name(name) {
                     Some(theme) => Ok(theme),
-                    None => die!("unknown theme {}", name.cyan()),
+                    None => {
+                        error!("unknown theme {}", name.cyan());
+
+                        if let Some(closest) = available.closest_match(name) {
+                            note!("theme {} exists", closest.name.cyan());
+                        }
+
+                        die!();
+                    }
                 }
             }
             None => Ok(themes::Theme::default()),
@@ -93,6 +112,12 @@ impl Cli {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+
+    if let Some(generator) = cli.generator {
+        let mut cmd = Cli::command();
+        print_completions(generator, &mut cmd);
+        return Ok(());
+    }
 
     if cli.list_themes {
         for theme in themes::available_themes()?.themes.into_iter() {
@@ -110,7 +135,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let options = document::RenderOptions {
         theme: cli.get_theme()?,
-        highlight: cli.syntax_highlighting,
+        math: cli.math,
+        highlight: cli.highlight,
     };
 
     info!("using theme {}", options.theme.name.cyan());

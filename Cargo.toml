@@ -11,9 +11,11 @@ authors = ["metafates"]
 
 [dependencies]
 clap = { version = "4.1.4", features = ["cargo", "derive", "env"] }
+clap_complete = "4.1.1"
 colored = "2.0.0"
 dirs = "4.0.0"
 include_dir = "0.7.3"
+levenshtein = "1.0.5"
 markdown = "1.0.0-alpha.5"
 minifier = "0.2.2"
 notify = "5.1.0"

@@ -53,6 +53,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap_complete"
+version = "4.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3d6540eedc41f8a5a76cf3d8d458057dcdf817be4158a55b5f861f7a5483de75"
+dependencies = [
+ "clap",
+]
+
+[[package]]
 name = "clap_derive"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -324,6 +333,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
+name = "levenshtein"
+version = "1.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "db13adb97ab515a3691f56e4dbab09283d0b86cb45abd991d8634a9d6f501760"
+
+[[package]]
 name = "libc"
 version = "0.2.139"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -356,12 +371,14 @@ dependencies = [
 
 [[package]]
 name = "marky"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "clap",
+ "clap_complete",
  "colored",
  "dirs",
  "include_dir",
+ "levenshtein",
  "markdown",
  "minifier",
  "notify",

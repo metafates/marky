@@ -1,4 +1,4 @@
-use crate::paths;
+use crate::{included::VENDOR_DIR, paths};
 use std::error::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -91,13 +91,24 @@ impl Themes {
     pub fn by_name(&self, name: &str) -> Option<Theme> {
         self.themes.iter().find(|theme| theme.name == name).cloned()
     }
+
+    pub fn closest_match(&self, name: &str) -> Option<Theme> {
+        use levenshtein::levenshtein;
+
+        self.themes
+            .iter()
+            .min_by(|a, b| {
+                levenshtein(name, a.name.as_str()).cmp(&levenshtein(name, b.name.as_str()))
+            })
+            .cloned()
+    }
 }
 
 impl Default for Themes {
     fn default() -> Self {
         let mut themes = Vec::new();
 
-        let themes_dir = crate::included::STATIC_DIR.get_dir("themes").unwrap();
+        let themes_dir = VENDOR_DIR.get_dir("themes").unwrap();
 
         for entry in themes_dir.entries().into_iter() {
             if let Some(file) = entry.as_file() {

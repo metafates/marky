@@ -11,7 +11,6 @@ macro_rules! error {
 #[macro_export]
 macro_rules! die {
     () => {{
-        error!();
         std::process::exit(1);
     }};
     ($($arg:tt)*) => {{
@@ -37,5 +36,15 @@ macro_rules! warn {
     };
     ($($arg:tt)*) => {
         eprintln!("{} {}", "warning:".yellow(), format!($($arg)*))
+    };
+}
+
+#[macro_export]
+macro_rules! note {
+    () => {
+        eprintln!("{}", "note".yellow())
+    };
+    ($($arg:tt)*) => {
+        eprintln!("{} {}", "note:".yellow(), format!($($arg)*))
     };
 }
