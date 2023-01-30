@@ -53,11 +53,21 @@ struct Cli {
     #[arg(long, help = "Output to stdout")]
     stdout: bool,
 
-    #[arg(short = 'H', long, help = "Enable syntax highligting")]
+    #[arg(
+        short = 'H',
+        long,
+        help = "Enable syntax highligting with highlight.js"
+    )]
     highlight: bool,
 
-    #[arg(short = 'M', long, help = "Enable math rendering (LaTeX)")]
+    #[arg(short = 'M', long, help = "Enable math rendering with KaTeX")]
     math: bool,
+
+    #[arg(short = 'D', long, help = "Enable UML diagrams rendering with Mermaid")]
+    diagrams: bool,
+
+    #[arg(short = 'A', long, help = "Enable all extra renderers")]
+    all: bool,
 
     #[arg(short, long, help = "Enable file watcher")]
     watch: bool,
@@ -135,13 +145,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let options = document::RenderOptions {
         theme: cli.get_theme()?,
-        math: cli.math,
-        highlight: cli.highlight,
+        math: cli.all || cli.math,
+        highlight: cli.all || cli.highlight,
+        diagrams: cli.all || cli.diagrams,
     };
 
-    info!("using theme {}", options.theme.name.cyan());
+    info!("Using theme {}", options.theme.name.cyan());
     if options.highlight {
-        info!("code syntax highlighting is enabled");
+        info!("Highlight.js syntax highlighting is enabled");
+    }
+
+    if options.math {
+        info!("KaTeX math rendering is enabled");
+    }
+
+    if options.diagrams {
+        info!("Mermaid diagrams rendering is enabled");
     }
 
     let out = {

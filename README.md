@@ -3,7 +3,7 @@
 > Work in progress
 
 Converts Markdown `.md` documents into pretty HTML pages with support
-for code syntax highlighting and LaTeX
+for code syntax highlighting, LaTeX and Mermaid diagrams
 
 ## Screenshots
 

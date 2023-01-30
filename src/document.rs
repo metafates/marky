@@ -9,6 +9,7 @@ pub struct RenderOptions {
     pub theme: Theme,
     pub highlight: bool,
     pub math: bool,
+    pub diagrams: bool,
 }
 
 impl Document {
@@ -57,9 +58,11 @@ impl Document {
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
     integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
     crossorigin="anonymous"></script>
-<script>
-document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySelectorAll(".language-math"))katex.render(e.textContent,e)}});
-</script>
+<script>document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySelectorAll(".language-math"))katex.render(e.textContent,e)}});</script>
+"#;
+        const DIAGRAMS: &str = r#"
+<script src="https://cdn.jsdelivr.net/npm/mermaid@9.3.0/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:!1}),document.addEventListener("DOMContentLoaded",()=>{const e=document.querySelectorAll("code.language-mermaid");let n=0;for(const t of e){const e=`mermaid${n}`;n++;const o=(e,n)=>{t.innerHTML=e},d=t.textContent;mermaid.mermaidAPI.render(e,d,o)}});</script>
 "#;
 
         let html = format!(
@@ -71,6 +74,7 @@ document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySe
 
 {highlight}
 {math}
+{diagrams}
 
 <title>{title}</title>
 
@@ -90,6 +94,7 @@ document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySe
                 String::new()
             },
             math = if options.math { MATH } else { "" },
+            diagrams = if options.diagrams { DIAGRAMS } else { "" },
             title = self.title().unwrap_or("Document".into()),
             style = options.theme.resolve()?,
             body = body,
