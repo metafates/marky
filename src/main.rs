@@ -11,6 +11,7 @@ mod document;
 mod included;
 mod log;
 mod paths;
+mod pdf;
 mod themes;
 
 #[derive(Parser)]
@@ -74,6 +75,9 @@ struct Cli {
 
     #[arg(short = 'O', long, help = "Open output file in the default app")]
     open: bool,
+
+    #[arg(short, long, help = "Saves document as PDF using headless chrome")]
+    pdf: bool,
 }
 
 fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
@@ -164,12 +168,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let out = {
+        let auto_extension = if cli.pdf { "pdf" } else { "html" };
+
         if let Some(out) = &cli.out {
             out.clone()
         } else if let Some(path) = &cli.path {
-            path.with_extension("html")
+            path.with_extension(auto_extension)
         } else {
-            PathBuf::new().with_file_name("out").with_extension("html")
+            PathBuf::new()
+                .with_file_name("out")
+                .with_extension(auto_extension)
         }
     };
 
@@ -184,21 +192,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let execution_start = std::time::Instant::now();
-    let contents = cli.get_markdown()?;
-    let doc = document::Document::new(&contents);
+    let md = cli.get_markdown()?;
+    let doc = document::Document::new(&md);
     let html = doc.render(&options)?;
-    let execution_duration = execution_start.elapsed();
 
+    let buffer = {
+        if cli.pdf {
+            pdf::html_to_pdf(html.as_str(), None)?
+        } else {
+            Vec::from(html.clone())
+        }
+    };
+
+    let execution_duration = execution_start.elapsed();
     let formatted_millis = format!("{}ms", execution_duration.as_millis()).yellow();
 
     if cli.stdout {
-        println!("{}", html);
+        let string = String::from_utf8(buffer).unwrap();
+        println!("{}", string);
         info!("took {}", formatted_millis);
     } else {
-        std::fs::write(&out, &html)?;
+        std::fs::write(&out, &buffer)?;
         info!(
             "wrote {}B to {} in {}",
-            html.len(),
+            &buffer.len(),
             &out.display(),
             formatted_millis,
         );

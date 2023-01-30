@@ -1,8 +1,8 @@
 [package]
 name = "marky"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
-description = "Markdown to HTML converter with beautiful themes"
+description = "Markdown to HTML converter with themes"
 license = "MIT"
 repository = "https://github.com/metafates/marky"
 authors = ["metafates"]
@@ -10,10 +10,12 @@ authors = ["metafates"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.68"
 clap = { version = "4.1.4", features = ["cargo", "derive", "env"] }
 clap_complete = "4.1.1"
 colored = "2.0.0"
 dirs = "4.0.0"
+headless_chrome = "1.0.1"
 include_dir = "0.7.3"
 levenshtein = "1.0.5"
 markdown = "1.0.0-alpha.5"
@@ -21,5 +23,6 @@ minifier = "0.2.2"
 notify = "5.1.0"
 open = "3.2.0"
 serde = { version = "1.0.152", features = ["derive"] }
+tempfile = "3.3.0"
 toml = "0.7.0"
 url = { version = "2.3.1", features = ["serde"] }

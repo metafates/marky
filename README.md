@@ -1,9 +1,9 @@
 # Marky
 
-> Work in progress
+Converts Markdown documents into themed HTML pages with support
+for code syntax highlighting, LaTeX and Mermaid diagrams.
 
-Converts Markdown `.md` documents into pretty HTML pages with support
-for code syntax highlighting, LaTeX and Mermaid diagrams
+Supports PDF conversion via headless chromium.
 
 ## Screenshots
 
@@ -28,10 +28,13 @@ Options:
       --where-config            Print config path
   -o, --out <OUT>               Output file
       --stdout                  Output to stdout
-  -H, --highlight               Enable syntax highligting
-  -M, --math                    Enable math rendering (LaTeX)
+  -H, --highlight               Enable syntax highligting with highlight.js
+  -M, --math                    Enable math rendering with KaTeX
+  -D, --diagrams                Enable UML diagrams rendering with Mermaid
+  -A, --all                     Enable all extra renderers
   -w, --watch                   Enable file watcher
   -O, --open                    Open output file in the default app
+  -p, --pdf                     Saves document as PDF using headless chrome
   -h, --help                    Print help
   -V, --version                 Print version
 ```
