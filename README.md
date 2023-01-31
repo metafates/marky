@@ -5,9 +5,12 @@ for code syntax highlighting, LaTeX and Mermaid diagrams.
 
 Supports PDF conversion via headless chromium.
 
-## Screenshots
-
-> To be added...
+<!--toc:start-->
+- [Examples](#examples)
+- [Install](#install)
+- [Help](#help)
+- [Build](#build)
+<!--toc:end-->
 
 ## Examples
 
@@ -44,11 +47,17 @@ cat doc.md | marky --out doc.html --open
 
 > See `--help` for more info
 
+## Install
+
+Install using [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+
+```bash
+cargo install marky
+```
+
 ## Help
 
 ```
-Markdown to HTML converter with beautiful themes
-
 Usage: marky [OPTIONS] [PATH]
 
 Arguments:
@@ -57,7 +66,6 @@ Arguments:
 Options:
       --completion <GENERATOR>  [possible values: bash, elvish, fish, powershell, zsh]
   -t, --theme <THEME>           Theme to use
-      --stdin                   Read input from stdin
       --string <STRING>         Read input from string
   -l, --list-themes             List available themes
       --where-config            Print config path
@@ -72,12 +80,6 @@ Options:
   -p, --pdf                     Saves document as PDF using headless chrome
   -h, --help                    Print help
   -V, --version                 Print version
-```
-
-## Install
-
-```bash
-cargo install marky
 ```
 
 ## Build
