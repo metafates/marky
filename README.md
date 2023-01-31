@@ -9,7 +9,42 @@ Supports PDF conversion via headless chromium.
 
 > To be added...
 
-## Usage
+## Examples
+
+Convert `doc.md` to `doc.html`
+```bash
+marky doc.md
+```
+
+Convert to PDF
+```bash
+marky doc.md --pdf
+```
+
+Start a live file watcher (will recompile your document on each save)
+```bash
+marky doc.md --watch
+```
+
+Enable extensions
+```bash
+# Or use --all to enable all
+marky doc.md --math --diagrams --highlight
+```
+
+Select and use a different theme with fzf
+```bash
+marky doc.md --theme (marky --list-themes | fzf)
+```
+
+Pipe from stdout and open compiled file
+```bash
+cat doc.md | marky --out doc.html --open
+```
+
+> See `--help` for more info
+
+## Help
 
 ```
 Markdown to HTML converter with beautiful themes
