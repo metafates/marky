@@ -78,7 +78,7 @@ impl Theme {
 
 impl Default for Theme {
     fn default() -> Self {
-        Themes::default().themes.first().unwrap().clone()
+        Themes::default().by_name("sakura").unwrap()
     }
 }
 

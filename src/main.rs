@@ -18,7 +18,7 @@ mod themes;
 #[command(name = "marky", author, version, about, long_about = None)]
 #[clap(group(
     ArgGroup::new("input")
-        .args(&["path", "string", "stdin"])
+        .args(&["path", "string"])
         .conflicts_with("info")
 ))]
 #[clap(group(
@@ -32,9 +32,6 @@ struct Cli {
 
     #[arg(short, long, help = "Theme to use")]
     theme: Option<String>,
-
-    #[arg(long, help = "Read input from stdin")]
-    stdin: bool,
 
     #[arg(help = "Read input from file", value_hint = ValueHint::FilePath)]
     path: Option<PathBuf>,
@@ -86,16 +83,16 @@ fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
 
 impl Cli {
     pub fn get_markdown(&self) -> io::Result<String> {
+        if atty::isnt(atty::Stream::Stdin) {
+            return read_stdin();
+        }
+
         if let Some(path) = &self.path {
             return read_path(&path);
         }
 
         if let Some(string) = &self.string {
             return Ok(string.clone());
-        }
-
-        if self.stdin {
-            return read_stdin();
         }
 
         die!("no input is given, see {}", "--help".yellow());
@@ -207,9 +204,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     } else {
         std::fs::write(&out, &buffer)?;
         success!(
-            "wrote {}B to {} in {}",
-            &buffer.len(),
-            &out.display(),
+            "wrote {} to {} in {}",
+            humansize::format_size(buffer.len(), humansize::DECIMAL),
+            &out.display().to_string().cyan(),
             formatted_millis,
         );
 
@@ -259,29 +256,26 @@ fn watch(
         match res {
             Ok(event) => {
                 use notify::{event::DataChange, event::ModifyKind, EventKind};
-                match event.kind {
-                    EventKind::Modify(ModifyKind::Data(DataChange::Content)) => {
-                        let read_res = read_path(&path);
+                if let EventKind::Modify(ModifyKind::Data(DataChange::Content)) = event.kind {
+                    let read_res = read_path(&path);
 
-                        if let Ok(contents) = read_res {
-                            let execution_start = std::time::Instant::now();
-                            let doc = document::Document::new(&contents);
-                            let buffer = doc.render(&options)?;
-                            let execution_duration = execution_start.elapsed();
+                    if let Ok(contents) = read_res {
+                        let execution_start = std::time::Instant::now();
+                        let doc = document::Document::new(&contents);
+                        let buffer = doc.render(&options)?;
+                        let execution_duration = execution_start.elapsed();
 
-                            match std::fs::write(&output, &buffer) {
-                                Ok(_) => success!(
-                                    "{} updated, wrote {}B to {} in {}",
-                                    path.display(),
-                                    buffer.len(),
-                                    output.display(),
-                                    format!("{}ms", execution_duration.as_millis()).yellow(),
-                                ),
-                                Err(e) => error!("{}", e.to_string()),
-                            }
+                        match std::fs::write(&output, &buffer) {
+                            Ok(_) => success!(
+                                "{} updated, wrote {} to {} in {}",
+                                path.display().to_string().cyan(),
+                                humansize::format_size(buffer.len(), humansize::DECIMAL),
+                                output.display().to_string().cyan(),
+                                format!("{}ms", execution_duration.as_millis()).yellow(),
+                            ),
+                            Err(e) => error!("{}", e.to_string()),
                         }
                     }
-                    _ => {}
                 };
             }
             Err(e) => error!("{}", e.to_string()),
