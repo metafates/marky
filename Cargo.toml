@@ -1,8 +1,8 @@
 [package]
 name = "marky"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2021"
-description = "Markdown to HTML converter with themes"
+description = "Markdown to HTML/PDF converter with pretty themes"
 license = "MIT"
 repository = "https://github.com/metafates/marky"
 authors = ["metafates"]
