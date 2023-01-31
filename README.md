@@ -34,7 +34,7 @@ marky doc.md --math --diagrams --highlight
 
 Select and use a different theme with fzf
 ```bash
-marky doc.md --theme (marky --list-themes | fzf)
+marky doc.md --theme $(marky --list-themes | fzf)
 ```
 
 Pipe from stdout and open compiled file
