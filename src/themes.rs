@@ -1,5 +1,5 @@
 use crate::{included::VENDOR_DIR, paths};
-use std::error::Error;
+use anyhow::{Error, Result};
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -10,18 +10,15 @@ pub struct Theme {
 
     path: Option<PathBuf>,
     inline: Option<String>,
-    url: Option<url::Url>,
 }
 
 impl Theme {
-    pub fn resolve(&self) -> Result<String, Box<dyn std::error::Error>> {
+    pub fn resolve(&self) -> Result<String> {
         let resolved = {
             if self.inline.is_some() {
                 Some(self.resolve_inline()?)
             } else if self.path.is_some() {
                 Some(self.resolve_path()?)
-            } else if self.url.is_some() {
-                Some(self.resolve_url()?)
             } else {
                 None
             }
@@ -30,12 +27,12 @@ impl Theme {
         match resolved {
             Some(css) => match minifier::css::minify(css.as_str()) {
                 Ok(minfied) => Ok(minfied.to_string()),
-                Err(error) => Err(Box::new(std::io::Error::new(
+                Err(error) => Err(Error::new(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     error,
                 ))),
             },
-            None => Err(Box::new(std::io::Error::new(
+            None => Err(Error::new(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 "theme source is not specified",
             ))),
@@ -67,12 +64,6 @@ impl Theme {
         file.read_to_string(&mut contents)?;
 
         Ok(contents)
-    }
-
-    fn resolve_url(&self) -> std::io::Result<String> {
-        assert!(self.url.is_some());
-
-        unimplemented!();
     }
 }
 
@@ -125,7 +116,6 @@ impl Default for Themes {
                     name,
                     inline,
                     path: None,
-                    url: None,
                 })
             }
         }
@@ -134,7 +124,7 @@ impl Default for Themes {
     }
 }
 
-pub fn available_themes() -> Result<Themes, Box<dyn Error>> {
+pub fn available_themes() -> Result<Themes> {
     let mut default = Themes::default();
 
     let themes_path = paths::files::themes();

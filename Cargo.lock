@@ -748,7 +748,7 @@ dependencies = [
 
 [[package]]
 name = "marky"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "anyhow",
  "atty",
@@ -767,7 +767,6 @@ dependencies = [
  "serde",
  "tempfile",
  "toml",
- "url 2.3.1",
 ]
 
 [[package]]
@@ -1486,7 +1485,6 @@ dependencies = [
  "form_urlencoded",
  "idna 0.3.0",
  "percent-encoding 2.2.0",
- "serde",
 ]
 
 [[package]]
