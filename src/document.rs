@@ -37,11 +37,9 @@ impl Document {
         let body = markdown::to_html_with_options(self.text.as_str(), &markdown_options)?;
 
         let highlighter: String = format!(
-            r#"
-    <style>{style}</style>
-    <script>{script}</script>
-    <script>hljs.highlightAll();</script>
-        "#,
+            r#"<style>{style}</style>
+<script>{script}</script>
+<script>hljs.highlightAll();</script>"#,
             style = VENDOR_DIR
                 .get_file("highlight/highlight.min.css")
                 .unwrap()
@@ -54,18 +52,12 @@ impl Document {
                 .unwrap(),
         );
 
-        const MATH: &str = r#"
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css"
-    integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"
-    integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4"
-    crossorigin="anonymous"></script>
-<script>document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySelectorAll(".language-math"))katex.render(e.textContent,e)}});</script>
-"#;
-        const DIAGRAMS: &str = r#"
-<script src="https://cdn.jsdelivr.net/npm/mermaid@9.3.0/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:!1}),document.addEventListener("DOMContentLoaded",()=>{const e=document.querySelectorAll("code.language-mermaid");let n=0;for(const t of e){const e=`mermaid${n}`;n++;const o=(e,n)=>{t.innerHTML=e},d=t.textContent;mermaid.mermaidAPI.render(e,d,o)}});</script>
-"#;
+        const MATH: &str = r#"<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js" integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4" crossorigin="anonymous"></script>
+<script>document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySelectorAll(".language-math"))katex.render(e.textContent,e)}});</script>"#;
+
+        const DIAGRAMS: &str = r#"<script src="https://cdn.jsdelivr.net/npm/mermaid@9.3.0/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:!1}),document.addEventListener("DOMContentLoaded",()=>{const e=document.querySelectorAll("code.language-mermaid");let n=0;for(const t of e){const e=`mermaid${n}`;n++;const o=(e,n)=>{t.innerHTML=e},d=t.textContent;mermaid.mermaidAPI.render(e,d,o)}});</script>"#;
 
         let html = format!(
             r#"<!DOCTYPE html>
@@ -80,16 +72,15 @@ impl Document {
 
 <title>{title}</title>
 
-<style>
-{style}
-</style>
+<style>{style}</style>
 </head>
 
 <body>
+<main class="container">
 {body}
+</main>
 </body>
-</html>
-"#,
+</html>"#,
             highlight = if options.highlight {
                 highlighter
             } else {

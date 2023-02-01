@@ -5,6 +5,9 @@ for code syntax highlighting, LaTeX and Mermaid diagrams.
 
 Supports PDF conversion via headless chromium.
 
+> **Note** When converting to PDF it will automatically download a suitable
+> headless chrome binary if one is not present on your system
+
 <!--toc:start-->
 - [Examples](#examples)
 - [Install](#install)

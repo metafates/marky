@@ -1,5 +1,7 @@
+use crate::warn;
 use crate::{included::VENDOR_DIR, paths};
 use anyhow::{Error, Result};
+use colored::Colorize;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -97,28 +99,34 @@ impl Themes {
 
 impl Default for Themes {
     fn default() -> Self {
-        let mut themes = Vec::new();
+        let themes: Vec<Theme> = VENDOR_DIR
+            .get_dir("themes")
+            .expect("themes directory in vendor/ must be present")
+            .entries()
+            .into_iter()
+            .filter_map(|entry| entry.as_file())
+            .filter_map(|file| {
+                let path = file.path();
 
-        let themes_dir = VENDOR_DIR.get_dir("themes").unwrap();
+                if path.extension().map(|ext| ext != "css").unwrap_or(true) {
+                    return None;
+                }
 
-        for entry in themes_dir.entries().into_iter() {
-            if let Some(file) = entry.as_file() {
-                let name = file
-                    .path()
-                    .file_stem()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string();
-                let inline = Some(file.contents_utf8().unwrap().to_string());
-
-                themes.push(Theme {
-                    name,
-                    inline,
-                    path: None,
-                })
-            }
-        }
+                let name = path.file_stem().unwrap().to_str().unwrap().to_string();
+                match std::str::from_utf8(file.contents()) {
+                    Ok(contents) => Some((name, contents)),
+                    Err(e) => {
+                        warn!("can't parse theme {}: {}", name.cyan(), e);
+                        None
+                    }
+                }
+            })
+            .map(|(name, contents)| Theme {
+                name,
+                inline: Some(contents.to_string()),
+                path: None,
+            })
+            .collect();
 
         Themes { themes }
     }

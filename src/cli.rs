@@ -64,7 +64,11 @@ pub struct Cli {
     #[arg(short = 'O', long, help = "Open output file in the default app")]
     pub open: bool,
 
-    #[arg(short, long, help = "Saves document as PDF using headless chrome")]
+    #[arg(
+        short,
+        long,
+        help = "Saves document as PDF, will auto-download headless-chrome"
+    )]
     pub pdf: bool,
 }
 
