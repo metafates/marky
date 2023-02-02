@@ -102,7 +102,7 @@ impl Document {
 
         let bytes: Vec<u8> = {
             if self.options.pdf {
-                pdf::html_to_pdf(html.as_str(), None)?
+                pdf::html_to_pdf(html.as_str())?
             } else {
                 html.into_bytes()
             }

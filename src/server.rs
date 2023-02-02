@@ -68,4 +68,9 @@ impl Server {
         self.output
             .replace(self.tx.send_replace(document.render_body()));
     }
+
+    // TODO: use it
+    pub async fn _shutdown(self) -> Result<(), ()> {
+        self._shutdown_tx.send(())
+    }
 }

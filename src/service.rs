@@ -11,10 +11,6 @@ use tokio::sync::watch::Receiver;
 use tower::util::ServiceExt;
 use tower_http::services::ServeDir;
 
-// use colored::Colorize;
-
-// use crate::info;
-
 pub async fn websocket_handler(
     ws: Option<WebSocketUpgrade>,
     Extension(config): Extension<crate::server::Config>,
@@ -25,10 +21,7 @@ pub async fn websocket_handler(
     }
 
     let doc = crate::document::Document {
-        text: r#"# Marky Live Server
-                
-Waiting for changes"#
-            .into(),
+        text: "😴 Waiting for changes".into(),
         options: config.render_options,
     };
 

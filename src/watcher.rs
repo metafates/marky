@@ -20,7 +20,7 @@ fn recompile(path: &PathBuf, options: &document::RenderOptions) -> io::Result<do
 
 macro_rules! watch {
     ($path: ident, $options:ident, $on_update:ident$(.$field:ident)*$( $arg:ident)*) => {{
-        info!("watching {}", $path.display().to_string().cyan());
+        info!("waiting for changes on {}", $path.display().to_string().cyan());
 
         let (tx, rx) = std::sync::mpsc::channel();
         let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default())?;
@@ -36,10 +36,12 @@ macro_rules! watch {
                 Ok(event) => {
                     use notify::{event::DataChange, event::ModifyKind, EventKind};
                     if let EventKind::Modify(ModifyKind::Data(DataChange::Content)) = event.kind {
-                        info!("{} updated", $path.display().to_string().cyan());
-
-                        if let Ok(compiled) = recompile($path, $options) {
-                            $on_update$(.$field)*($($arg,)* &compiled).await;
+                        match recompile($path, $options) {
+                            Ok(compiled) => {
+                                $on_update$(.$field)*($($arg,)* &compiled).await;
+                                info!("updated")
+                            },
+                            Err(e) => error!("compilation failed: {}", e)
                         }
                     };
                 }

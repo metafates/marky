@@ -3,10 +3,8 @@ use anyhow::Result;
 use colored::Colorize;
 use headless_chrome::types::PrintToPdfOptions;
 use std::io::{self, Write};
-use std::thread::sleep;
-use std::time::Duration;
 
-pub fn html_to_pdf(html: &str, wait: Option<Duration>) -> Result<Vec<u8>> {
+pub fn html_to_pdf(html: &str) -> Result<Vec<u8>> {
     let options = headless_chrome::LaunchOptionsBuilder::default()
         .build()
         .expect("Default should not panic");
@@ -34,11 +32,6 @@ pub fn html_to_pdf(html: &str, wait: Option<Duration>) -> Result<Vec<u8>> {
 
     info!("Opening temporary html file");
     let tab = tab.navigate_to(&uri)?.wait_until_navigated()?;
-
-    if let Some(wait) = wait {
-        info!("Waiting for {}ms", wait.as_millis());
-        sleep(wait);
-    }
 
     let options = PrintToPdfOptions {
         display_header_footer: Some(false),

@@ -1,19 +1,23 @@
 # Marky
 
-Converts Markdown documents into themed HTML pages with support
-for code syntax highlighting, LaTeX and Mermaid diagrams.
+Markdown Magician 🧙
 
-Supports preview with **hot-reload** and **PDF** conversion via [headless chromium](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md).
+**Features**
+
+- Hot reload previewing 🔥
+- Conversion to **HTML** / **PDF**  🏭
+- Themes! ✨
+- Extensions - Math, diagrams, syntax-highlighting 🧩
 
 > **Note** When converting to PDF it will automatically download a suitable
-> headless chrome binary if one is not present on your system
+> [headless chrome](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md) binary if one is not present on your system.
+> Everything is automated!
 
 <!--toc:start-->
-
--   [Examples](#examples)
--   [Install](#install)
--   [Help](#help)
--   [Build](#build)
+- [Examples](#examples)
+- [Install](#install)
+- [Help](#help)
+- [Build](#build)
 <!--toc:end-->
 
 ## Examples
@@ -30,12 +34,10 @@ Convert to PDF
 marky doc.md --pdf
 ```
 
-Start a local server with hot-reload 
-
-Start a live file watcher (will recompile your document on each save)
+Start a local preview server with hot-reload 
 
 ```bash
-marky doc.md --watch
+marky doc.md --live
 ```
 
 Enable extensions
@@ -48,7 +50,7 @@ marky doc.md --math --diagrams --highlight
 Select and use a different theme with fzf
 
 ```bash
-marky doc.md --theme $(marky --list-themes | fzf)
+marky doc.md --theme $(marky --themes | fzf)
 ```
 
 Pipe from stdout and open compiled file
@@ -79,7 +81,7 @@ Options:
       --completion <GENERATOR>  [possible values: bash, elvish, fish, powershell, zsh]
   -t, --theme <THEME>           Theme to use
       --string <STRING>         Read input from string
-  -l, --list-themes             List available themes
+      --themes                  List available themes
       --where-config            Print config path
   -o, --out <OUT>               Output file
       --stdout                  Output to stdout
@@ -87,9 +89,11 @@ Options:
   -M, --math                    Enable math rendering with KaTeX
   -D, --diagrams                Enable UML diagrams rendering with Mermaid
   -A, --all                     Enable all extra renderers
-  -w, --watch                   Enable file watcher
+  -w, --watch                   Recompile file on save
+  -l, --live                    Live preview in the browser
+      --port <PORT>             Port of the live server [default: 8080]
   -O, --open                    Open output file in the default app
-  -p, --pdf                     Saves document as PDF using headless chrome
+  -p, --pdf                     Saves document as PDF, will auto-download headless-chrome
   -h, --help                    Print help
   -V, --version                 Print version
 ```
@@ -97,5 +101,31 @@ Options:
 ## Build
 
 ```bash
+git clone https://github.com/metafates/marky.git
+cd marky
 cargo install --path .
 ```
+
+## Screenshots
+
+Some examples...
+
+```bash
+marky README.md --theme sakura # default theme
+```
+![sakura](./sakura.png)
+
+
+```bash
+marky README.md --theme air
+```
+![air](./air.png)
+
+```bash
+marky README.md --theme retro
+```
+![retro](./retro.png)
+
+See `marky --themes` to show all available themes.
+
+You can also your own themes, but it's not documented yet... 😴
