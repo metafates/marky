@@ -16,7 +16,11 @@ use std::{io, path::PathBuf};
         .args(&["out", "stdout"])
         .conflicts_with("info")
 ))]
-
+#[clap(group(
+    ArgGroup::new("watchers")
+        .args(&["watch", "live"])
+        .conflicts_with("info")
+))]
 pub struct Cli {
     #[arg(long = "completion", value_enum)]
     pub generator: Option<Shell>,
@@ -30,8 +34,8 @@ pub struct Cli {
     #[arg(long, help = "Read input from string")]
     pub string: Option<String>,
 
-    #[arg(short, long, group = "info", help = "List available themes")]
-    pub list_themes: bool,
+    #[arg(long, group = "info", help = "List available themes")]
+    pub themes: bool,
 
     #[arg(long, group = "info", help = "Print config path")]
     pub where_config: bool,
@@ -58,10 +62,10 @@ pub struct Cli {
     #[arg(short = 'A', long, help = "Enable all extra renderers")]
     pub all: bool,
 
-    #[arg(short, long, help = "Enable file watcher")]
+    #[arg(short, long, help = "Recompile file on save")]
     pub watch: bool,
 
-    #[arg(long, help = "Enable live file preview")]
+    #[arg(short, long, help = "Live preview in the browser")]
     pub live: bool,
 
     #[arg(long, default_value = "8080", help = "Port of the live server")]

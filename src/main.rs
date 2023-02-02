@@ -23,7 +23,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    if cli.list_themes {
+    if cli.themes {
         for theme in themes::available_themes()?.themes.into_iter() {
             println!("{}", theme.name);
         }
@@ -83,7 +83,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    if cli.watch {
+    if cli.watch || cli.live {
         if cli.path.is_none() {
             die!("watcher needs a file to watch");
         }
@@ -95,8 +95,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         } else {
             watcher::watch_file(path, &out, &options).await?;
         }
-
-        // watcher::watch(&cli.path.unwrap(), &out, &options).await?;
 
         return Ok(());
     }

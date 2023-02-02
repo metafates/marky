@@ -3,47 +3,56 @@
 Converts Markdown documents into themed HTML pages with support
 for code syntax highlighting, LaTeX and Mermaid diagrams.
 
-Supports PDF conversion via headless chromium.
+Supports preview with **hot-reload** and **PDF** conversion via [headless chromium](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md).
 
 > **Note** When converting to PDF it will automatically download a suitable
 > headless chrome binary if one is not present on your system
 
 <!--toc:start-->
-- [Examples](#examples)
-- [Install](#install)
-- [Help](#help)
-- [Build](#build)
+
+-   [Examples](#examples)
+-   [Install](#install)
+-   [Help](#help)
+-   [Build](#build)
 <!--toc:end-->
 
 ## Examples
 
 Convert `doc.md` to `doc.html`
+
 ```bash
 marky doc.md
 ```
 
 Convert to PDF
+
 ```bash
 marky doc.md --pdf
 ```
 
+Start a local server with hot-reload 
+
 Start a live file watcher (will recompile your document on each save)
+
 ```bash
 marky doc.md --watch
 ```
 
 Enable extensions
+
 ```bash
 # Or use --all to enable all
 marky doc.md --math --diagrams --highlight
 ```
 
 Select and use a different theme with fzf
+
 ```bash
 marky doc.md --theme $(marky --list-themes | fzf)
 ```
 
 Pipe from stdout and open compiled file
+
 ```bash
 cat doc.md | marky --out doc.html --open
 ```
