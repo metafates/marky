@@ -18,9 +18,7 @@ clap = { version = "4.1.4", features = ["cargo", "derive", "env"] }
 clap_complete = "4.1.1"
 colored = "2.0.0"
 dirs = "4.0.0"
-headless_chrome = { git = "https://github.com/atroche/rust-headless-chrome", features = [
-  "fetch",
-] }
+headless_chrome = { version = "1.0.2", features = ["fetch"] }
 humansize = "2.1.3"
 include_dir = "0.7.3"
 levenshtein = "1.0.5"
