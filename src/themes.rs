@@ -1,9 +1,9 @@
 use crate::warn;
 use crate::{included::VENDOR_DIR, paths};
-use anyhow::{Error, Result};
+use anyhow::Result;
 use colored::Colorize;
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::{self, prelude::*};
 use std::path::PathBuf;
 
 #[derive(serde::Deserialize, Clone)]
@@ -15,7 +15,7 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn resolve(&self) -> Result<String> {
+    pub fn resolve(&self) -> io::Result<String> {
         let resolved = {
             if self.inline.is_some() {
                 Some(self.resolve_inline()?)
@@ -29,15 +29,12 @@ impl Theme {
         match resolved {
             Some(css) => match minifier::css::minify(css.as_str()) {
                 Ok(minfied) => Ok(minfied.to_string()),
-                Err(error) => Err(Error::new(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    error,
-                ))),
+                Err(error) => Err(std::io::Error::new(io::ErrorKind::Other, error)),
             },
-            None => Err(Error::new(std::io::Error::new(
+            None => Err(io::Error::new(
                 std::io::ErrorKind::Other,
                 "theme source is not specified",
-            ))),
+            )),
         }
     }
 

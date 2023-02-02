@@ -29,3 +29,14 @@ open = "3.2.0"
 serde = { version = "1.0.152", features = ["derive"] }
 tempfile = "3.3.0"
 toml = "0.7.0"
+tokio = { version = "1.25.0", features = [
+  "rt-multi-thread",
+  "macros",
+  "io-util",
+] }
+axum = { version = "0.6.4", default-features = false, features = [
+  "headers",
+  "http1",
+  "ws",
+] }
+handlebars = "4.3.6"

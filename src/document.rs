@@ -1,28 +1,62 @@
-use crate::included::VENDOR_DIR;
+use anyhow::Result;
+use handlebars::Handlebars;
+use serde::Serialize;
+
+use crate::included::{TEMPLATES_DIR, VENDOR_DIR};
 use crate::pdf;
 use crate::themes::Theme;
 
 pub struct Document {
-    text: String,
+    pub text: String,
+    pub options: RenderOptions,
 }
 
+#[derive(Clone)]
 pub struct RenderOptions {
     pub theme: Theme,
     pub highlight: bool,
     pub math: bool,
     pub diagrams: bool,
     pub pdf: bool,
+    pub live: bool,
+}
+
+#[derive(Serialize)]
+pub struct TemplateData {
+    pub theme: String,
+    pub highlight: bool,
+    pub math: bool,
+    pub diagrams: bool,
+    pub compiled: String,
+    pub title: String,
+    pub websocket: String,
+    pub script: String,
+    pub live: bool,
 }
 
 impl Document {
-    pub fn render(&self, options: &RenderOptions) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    fn handlebars() -> Handlebars<'static> {
+        let mut reg = Handlebars::new();
+        let template_string = TEMPLATES_DIR
+            .get_file("template.hbs")
+            .expect("must be present")
+            .contents_utf8()
+            .expect("template must be a valid utf8");
+
+        reg.register_template_string("html", template_string)
+            .expect("must be a valid handlebars template");
+
+        reg
+    }
+
+    pub fn render_body(&self) -> String {
         let markdown_options = markdown::Options {
             parse: markdown::ParseOptions {
                 constructs: markdown::Constructs {
                     html_flow: true,
                     html_text: true,
-                    math_flow: options.math,
-                    math_text: options.math,
+                    math_flow: self.options.math,
+                    math_text: self.options.math,
                     definition: true,
                     ..markdown::Constructs::gfm()
                 },
@@ -34,67 +68,40 @@ impl Document {
             },
         };
 
-        let body = markdown::to_html_with_options(self.text.as_str(), &markdown_options)?;
+        markdown::to_html_with_options(self.text.as_str(), &markdown_options)
+            .expect("never errors with MDX disabled")
+    }
 
-        let highlighter: String = format!(
-            r#"<style>{style}</style>
-<script>{script}</script>
-<script>hljs.highlightAll();</script>"#,
-            style = VENDOR_DIR
-                .get_file("highlight/highlight.min.css")
-                .unwrap()
-                .contents_utf8()
-                .unwrap(),
-            script = VENDOR_DIR
-                .get_file("highlight/highlight.min.js")
-                .unwrap()
-                .contents_utf8()
-                .unwrap(),
-        );
+    pub fn render(&self) -> Result<Vec<u8>> {
+        let body = self.render_body();
 
-        const MATH: &str = r#"<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css" integrity="sha384-vKruj+a13U8yHIkAyGgK1J3ArTLzrFGBbBc0tDp4ad/EyewESeXE/Iv67Aj8gKZ0" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js" integrity="sha384-PwRUT/YqbnEjkZO0zZxNqcxACrXe+j766U2amXcgMg5457rve2Y7I6ZJSm2A0mS4" crossorigin="anonymous"></script>
-<script>document.addEventListener("DOMContentLoaded",()=>{{for(let e of document.querySelectorAll(".language-math"))katex.render(e.textContent,e)}});</script>"#;
-
-        const DIAGRAMS: &str = r#"<script src="https://cdn.jsdelivr.net/npm/mermaid@9.3.0/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:!1}),document.addEventListener("DOMContentLoaded",()=>{const e=document.querySelectorAll("code.language-mermaid");let n=0;for(const t of e){const e=`mermaid${n}`;n++;const o=(e,n)=>{t.innerHTML=e},d=t.textContent;mermaid.mermaidAPI.render(e,d,o)}});</script>"#;
-
-        let html = format!(
-            r#"<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-{highlight}
-{math}
-{diagrams}
-
-<title>{title}</title>
-
-<style>{style}</style>
-</head>
-
-<body>
-<main class="container">
-{body}
-</main>
-</body>
-</html>"#,
-            highlight = if options.highlight {
-                highlighter
-            } else {
-                String::new()
+        let html = Self::handlebars().render(
+            "html",
+            &TemplateData {
+                theme: self.options.theme.resolve()?,
+                highlight: self.options.highlight,
+                math: self.options.math,
+                diagrams: self.options.diagrams,
+                compiled: body,
+                title: self.title().unwrap_or("Document".into()),
+                live: self.options.live,
+                websocket: VENDOR_DIR
+                    .get_file("js/reconnecting-websocket.js")
+                    .unwrap()
+                    .contents_utf8()
+                    .unwrap()
+                    .to_string(),
+                script: VENDOR_DIR
+                    .get_file("js/script.js")
+                    .unwrap()
+                    .contents_utf8()
+                    .unwrap()
+                    .to_string(),
             },
-            math = if options.math { MATH } else { "" },
-            diagrams = if options.diagrams { DIAGRAMS } else { "" },
-            title = self.title().unwrap_or("Document".into()),
-            style = options.theme.resolve()?,
-            body = body,
-        );
+        )?;
 
         let bytes: Vec<u8> = {
-            if options.pdf {
+            if self.options.pdf {
                 pdf::html_to_pdf(html.as_str(), None)?
             } else {
                 html.into_bytes()
@@ -102,10 +109,6 @@ impl Document {
         };
 
         Ok(bytes)
-    }
-
-    pub fn new(text: &str) -> Self {
-        Document { text: text.into() }
     }
 
     pub fn title(&self) -> Option<String> {

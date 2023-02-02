@@ -9,10 +9,12 @@ mod ioutil;
 mod log;
 mod paths;
 mod pdf;
+mod server;
+mod service;
 mod themes;
 mod watcher;
 
-fn run() -> Result<(), Box<dyn std::error::Error>> {
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let cli = cli::Cli::parse();
 
     if let Some(generator) = cli.generator {
@@ -51,6 +53,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         highlight: cli.all || cli.highlight,
         diagrams: cli.all || cli.diagrams,
         pdf: cli.pdf,
+        live: cli.live,
     };
 
     info!("Using theme {}", options.theme.name.cyan());
@@ -85,14 +88,24 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             die!("watcher needs a file to watch");
         }
 
-        watcher::watch(&cli.path.unwrap(), &out, &options)?;
+        let path = &cli.path.unwrap();
+
+        if cli.live {
+            watcher::watch_live(path, &options, cli.port).await?;
+        } else {
+            watcher::watch_file(path, &out, &options).await?;
+        }
+
+        // watcher::watch(&cli.path.unwrap(), &out, &options).await?;
 
         return Ok(());
     }
 
-    let md = cli.get_markdown()?;
-    let doc = document::Document::new(&md);
-    let buffer = doc.render(&options)?;
+    let doc = document::Document {
+        text: cli.get_markdown()?,
+        options,
+    };
+    let buffer = doc.render()?;
 
     if cli.stdout {
         let string = String::from_utf8(buffer).unwrap();
@@ -113,10 +126,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let execution_start = std::time::Instant::now();
 
-    match run() {
+    match run().await {
         Ok(_) => {
             let execution_duration = execution_start.elapsed();
 

@@ -61,6 +61,12 @@ pub struct Cli {
     #[arg(short, long, help = "Enable file watcher")]
     pub watch: bool,
 
+    #[arg(long, help = "Enable live file preview")]
+    pub live: bool,
+
+    #[arg(long, default_value = "8080", help = "Port of the live server")]
+    pub port: u16,
+
     #[arg(short = 'O', long, help = "Open output file in the default app")]
     pub open: bool,
 
