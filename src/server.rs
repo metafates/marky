@@ -1,5 +1,6 @@
-use std::{cell::RefCell, net::SocketAddr};
+use std::{cell::RefCell, net::SocketAddr, path::PathBuf};
 
+use crate::document;
 use crate::{info, service, warn};
 use axum::{routing::get, Extension, Router};
 use colored::Colorize;
@@ -7,6 +8,12 @@ use tokio::sync::{
     oneshot,
     watch::{self, Sender},
 };
+
+#[derive(Clone)]
+pub struct Config {
+    pub root_dir: PathBuf,
+    pub render_options: document::RenderOptions,
+}
 
 /// Code is taken from the https://github.com/euclio/aurelius/
 
@@ -23,14 +30,15 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn bind(addr: &SocketAddr, options: crate::document::RenderOptions) -> Self {
+    pub fn bind(addr: &SocketAddr, config: Config) -> Self {
         let (tx, rx) = watch::channel(String::new());
         let (shutdown_tx, shutdown_rx) = oneshot::channel();
 
         let app = Router::new()
             .route("/", get(service::websocket_handler))
+            .fallback_service(get(service::serve_static_file))
             .layer(Extension(rx))
-            .layer(Extension(options));
+            .layer(Extension(config));
 
         let http_server = axum::Server::bind(addr).serve(app.into_make_service());
         let addr = http_server.local_addr();

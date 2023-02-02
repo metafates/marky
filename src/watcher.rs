@@ -3,7 +3,10 @@ use colored::Colorize;
 use notify::Watcher;
 
 use crate::{document, error, info, ioutil};
-use std::{io, net, path::PathBuf};
+use std::{
+    io, net,
+    path::{Path, PathBuf},
+};
 
 fn recompile(path: &PathBuf, options: &document::RenderOptions) -> io::Result<document::Document> {
     match ioutil::read_path(path) {
@@ -58,7 +61,16 @@ pub async fn watch_live(
         port,
     ));
 
-    let server = crate::server::Server::bind(&addr, options.clone());
+    let config = crate::server::Config {
+        root_dir: path
+            .clone()
+            .parent()
+            .unwrap_or(Path::new("."))
+            .to_path_buf(),
+        render_options: options.clone(),
+    };
+
+    let server = crate::server::Server::bind(&addr, config);
 
     watch!(path, options, server.send)
 }

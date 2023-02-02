@@ -40,3 +40,5 @@ axum = { version = "0.6.4", default-features = false, features = [
   "ws",
 ] }
 handlebars = "4.3.6"
+tower = "0.4.13"
+tower-http = { version = "0.3.4", features = ["fs", "trace"] }

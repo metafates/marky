@@ -1,13 +1,15 @@
 use axum::{
+    body::Body,
     extract::{
         ws::{Message as AxumMessage, WebSocket, WebSocketUpgrade},
         Extension,
     },
-    http::StatusCode,
+    http::{Request, StatusCode},
     response::{Html, IntoResponse},
 };
-
 use tokio::sync::watch::Receiver;
+use tower::util::ServiceExt;
+use tower_http::services::ServeDir;
 
 // use colored::Colorize;
 
@@ -15,7 +17,7 @@ use tokio::sync::watch::Receiver;
 
 pub async fn websocket_handler(
     ws: Option<WebSocketUpgrade>,
-    Extension(options): Extension<crate::document::RenderOptions>,
+    Extension(config): Extension<crate::server::Config>,
     Extension(html_rx): Extension<Receiver<String>>,
 ) -> impl IntoResponse {
     if let Some(ws) = ws {
@@ -23,8 +25,11 @@ pub async fn websocket_handler(
     }
 
     let doc = crate::document::Document {
-        text: "".into(),
-        options,
+        text: r#"# Marky Live Server
+                
+Waiting for changes"#
+            .into(),
+        options: config.render_options,
     };
 
     let buffer = doc.render().expect("Document with empty text must render");
@@ -39,4 +44,16 @@ async fn handle_websocket(mut socket: WebSocket, mut html_rx: Receiver<String>) 
     }
 
     let _ = socket.send(AxumMessage::Close(None)).await;
+}
+
+pub async fn serve_static_file(
+    Extension(config): Extension<crate::server::Config>,
+    req: Request<Body>,
+) -> impl IntoResponse {
+    let service = ServeDir::new(config.root_dir);
+
+    service
+        .oneshot(req)
+        .await
+        .map_err(|e| (StatusCode::NOT_FOUND, e.to_string()))
 }
