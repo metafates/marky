@@ -18,6 +18,7 @@ Markdown Magician 🧙
 - [Install](#install)
 - [Help](#help)
 - [Build](#build)
+- [Screenshots](#screenshots)
 <!--toc:end-->
 
 ## Examples
@@ -113,18 +114,18 @@ Some examples...
 ```bash
 marky README.md --theme sakura # default theme
 ```
-![sakura](./sakura.png)
-
+![sakura](https://user-images.githubusercontent.com/62389790/216391306-ecd73229-6342-4a79-8f7f-5f632a231a6f.png)
 
 ```bash
 marky README.md --theme air
 ```
-![air](./air.png)
+![air](https://user-images.githubusercontent.com/62389790/216391415-46ca090a-801d-423e-a523-dc3e59ed1f77.png)
 
 ```bash
 marky README.md --theme retro
 ```
-![retro](./retro.png)
+![retro](https://user-images.githubusercontent.com/62389790/216391465-ddfff1ad-3cd6-43b8-a193-fc9c664ec018.png)
+
 
 See `marky --themes` to show all available themes.
 
