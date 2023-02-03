@@ -638,7 +638,8 @@ dependencies = [
 [[package]]
 name = "headless_chrome"
 version = "1.0.2"
-source = "git+https://github.com/atroche/rust-headless-chrome#60b775b0c3ab99ce4cfa7516d368b4f87919738c"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f818e6b05507abe6aa732bdc0386e48fcb60ea9031a6ed7b5bfcb35329db60e"
 dependencies = [
  "anyhow",
  "auto_generate_cdp",
@@ -957,7 +958,7 @@ dependencies = [
 
 [[package]]
 name = "marky"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "atty",
@@ -973,6 +974,7 @@ dependencies = [
  "levenshtein",
  "markdown",
  "minifier",
+ "minify-js",
  "notify",
  "open",
  "serde",
@@ -1016,6 +1018,16 @@ name = "minifier"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8eb022374af2f446981254e6bf9efb6e2c9e1a53176d395fca02792fd4435729"
+
+[[package]]
+name = "minify-js"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c300f90ba1138b5c5daf5d9441dc9bdc67b808aac22cf638362a2647bc213be4"
+dependencies = [
+ "lazy_static",
+ "parse-js",
+]
 
 [[package]]
 name = "miniz_oxide"
@@ -1102,6 +1114,17 @@ name = "os_str_bytes"
 version = "6.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b7820b9daea5457c9f21c69448905d723fbd21136ccf521748f23fd49e723ee"
+
+[[package]]
+name = "parse-js"
+version = "0.10.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "30534759e6ad87aa144c396544747e1c25b1020bd133356fd758c8facec764e5"
+dependencies = [
+ "aho-corasick",
+ "lazy_static",
+ "memchr",
+]
 
 [[package]]
 name = "password-hash"

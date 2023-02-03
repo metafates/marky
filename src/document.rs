@@ -75,6 +75,24 @@ impl Document {
     pub fn render(&self) -> Result<Vec<u8>> {
         let body = self.render_body();
 
+        let script: String = {
+            let mut minified_script = Vec::new();
+            let script = VENDOR_DIR
+                .get_file("js/script.js")
+                .unwrap()
+                .contents()
+                .to_vec();
+
+            match minify_js::minify(
+                minify_js::TopLevelMode::Global,
+                script.clone(),
+                &mut minified_script,
+            ) {
+                Ok(()) => String::from_utf8_lossy(minified_script.as_slice()).to_string(),
+                Err(_) => String::from_utf8_lossy(script.as_slice()).to_string(),
+            }
+        };
+
         let html = Self::handlebars().render(
             "html",
             &TemplateData {
@@ -91,12 +109,7 @@ impl Document {
                     .contents_utf8()
                     .unwrap()
                     .to_string(),
-                script: VENDOR_DIR
-                    .get_file("js/script.js")
-                    .unwrap()
-                    .contents_utf8()
-                    .unwrap()
-                    .to_string(),
+                script,
             },
         )?;
 

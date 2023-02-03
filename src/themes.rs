@@ -2,6 +2,7 @@ use crate::warn;
 use crate::{included::VENDOR_DIR, paths};
 use anyhow::Result;
 use colored::Colorize;
+
 use std::fs::File;
 use std::io::{self, prelude::*};
 use std::path::PathBuf;
@@ -15,27 +16,25 @@ pub struct Theme {
 }
 
 impl Theme {
-    pub fn resolve(&self) -> io::Result<String> {
-        let resolved = {
+    pub fn resolve(&self) -> Result<String> {
+        let css = {
             if self.inline.is_some() {
-                Some(self.resolve_inline()?)
+                self.resolve_inline()?
             } else if self.path.is_some() {
-                Some(self.resolve_path()?)
+                self.resolve_path()?
             } else {
-                None
+                return Err(anyhow::Error::new(io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "theme source is not specified",
+                )));
             }
         };
 
-        match resolved {
-            Some(css) => match minifier::css::minify(css.as_str()) {
-                Ok(minfied) => Ok(minfied.to_string()),
-                Err(error) => Err(std::io::Error::new(io::ErrorKind::Other, error)),
-            },
-            None => Err(io::Error::new(
-                std::io::ErrorKind::Other,
-                "theme source is not specified",
-            )),
-        }
+        let result = minifier::css::minify(css.as_str())
+            .map(|m| m.to_string())
+            .unwrap_or(css);
+
+        Ok(result)
     }
 
     fn resolve_inline(&self) -> std::io::Result<String> {
