@@ -34,8 +34,10 @@ macro_rules! watch {
         for res in rx {
             match res {
                 Ok(event) => {
-                    use notify::{event::DataChange, event::ModifyKind, EventKind};
-                    if let EventKind::Modify(ModifyKind::Data(DataChange::Content)) = event.kind {
+                    use notify::{event::ModifyKind, EventKind};
+
+                    // FIXME: runs twice for some reason...
+                    if let EventKind::Modify(ModifyKind::Data(_)) = event.kind {
                         match recompile($path, $options) {
                             Ok(compiled) => {
                                 $on_update$(.$field)*($($arg,)* &compiled).await;
