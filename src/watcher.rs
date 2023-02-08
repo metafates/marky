@@ -34,10 +34,7 @@ macro_rules! watch {
         for res in rx {
             match res {
                 Ok(event) => {
-                    use notify::{event::ModifyKind, EventKind};
-
-                    // FIXME: runs twice for some reason...
-                    if let EventKind::Modify(ModifyKind::Data(_)) = event.kind {
+                    if event.kind.is_modify() {
                         match recompile($path, $options) {
                             Ok(compiled) => {
                                 $on_update$(.$field)*($($arg,)* &compiled).await;
@@ -45,7 +42,7 @@ macro_rules! watch {
                             },
                             Err(e) => error!("compilation failed: {}", e)
                         }
-                    };
+                    }
                 }
                 Err(e) => error!("{}", e.to_string()),
             }
