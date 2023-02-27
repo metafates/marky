@@ -28,7 +28,7 @@ pub fn html_to_pdf(html: &str) -> Result<Vec<u8>> {
     let browser = headless_chrome::Browser::new(options)?;
 
     info!("Waiting for initial tab");
-    let tab = browser.wait_for_initial_tab()?;
+    let tab = browser.new_tab()?;
 
     info!("Opening temporary html file");
     let tab = tab.navigate_to(&uri)?.wait_until_navigated()?;

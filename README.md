@@ -48,6 +48,13 @@ Enable extensions
 marky doc.md --math --diagrams --highlight
 ```
 
+Include local images as base64 encoded (beta)
+
+```bash
+# default: none, possible values: none, local, remote, all
+marky doc.md --include-images local
+```
+
 Select and use a different theme with fzf
 
 ```bash

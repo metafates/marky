@@ -1,6 +1,13 @@
+use std::fs;
+
+use crate::info;
 use anyhow::Result;
+use colored::Colorize;
 use handlebars::Handlebars;
+use image::{DynamicImage, ImageOutputFormat};
+use lol_html::{element, HtmlRewriter, Settings};
 use serde::Serialize;
+use std::io::Cursor;
 
 use crate::included::{TEMPLATES_DIR, VENDOR_DIR};
 use crate::pdf;
@@ -11,6 +18,14 @@ pub struct Document {
     pub options: RenderOptions,
 }
 
+#[derive(clap::ValueEnum, Clone, Copy, Debug, PartialEq)]
+pub enum IncludeLevel {
+    None,
+    Local,
+    Remote,
+    All,
+}
+
 #[derive(Clone)]
 pub struct RenderOptions {
     pub theme: Theme,
@@ -19,6 +34,7 @@ pub struct RenderOptions {
     pub diagrams: bool,
     pub pdf: bool,
     pub live: bool,
+    pub include_images: IncludeLevel,
 }
 
 #[derive(Serialize)]
@@ -68,8 +84,14 @@ impl Document {
             },
         };
 
-        markdown::to_html_with_options(self.text.as_str(), &markdown_options)
-            .expect("never errors with MDX disabled")
+        let html = markdown::to_html_with_options(self.text.as_str(), &markdown_options)
+            .expect("never errors with MDX disabled");
+
+        if self.options.include_images != IncludeLevel::None {
+            self.include_images(html).unwrap() // TODO
+        } else {
+            html
+        }
     }
 
     pub fn render(&self) -> Result<Vec<u8>> {
@@ -113,12 +135,10 @@ impl Document {
             },
         )?;
 
-        let bytes: Vec<u8> = {
-            if self.options.pdf {
-                pdf::html_to_pdf(html.as_str())?
-            } else {
-                html.into_bytes()
-            }
+        let bytes: Vec<u8> = if self.options.pdf {
+            pdf::html_to_pdf(html.as_str())?
+        } else {
+            html.into_bytes()
         };
 
         Ok(bytes)
@@ -150,4 +170,64 @@ impl Document {
             },
         }
     }
+
+    fn include_images(&self, html_page: String) -> anyhow::Result<String> {
+        let mut output = vec![];
+
+        let mut rewriter = HtmlRewriter::new(
+            Settings {
+                element_content_handlers: vec![element!("img[src]", |el| {
+                    let src = el.get_attribute("src").expect("src was required");
+
+                    let data = {
+                        let include_remote = self.options.include_images == IncludeLevel::All
+                            || self.options.include_images == IncludeLevel::Remote;
+
+                        let include_local = self.options.include_images == IncludeLevel::All
+                            || self.options.include_images == IncludeLevel::Local;
+
+                        let is_remote = src.starts_with("http");
+
+                        if is_remote && include_remote {
+                            info!("Downloading {}", src);
+                            Some(download_image(src.as_str())?)
+                        } else if !is_remote && include_local {
+                            info!("Reading {}", src);
+                            Some(fs::read(src)?)
+                        } else {
+                            info!("Skipping {}", src);
+                            None
+                        }
+                    };
+
+                    if let Some(data) = data {
+                        info!("Encoding to BASE64",);
+                        let img = image::load_from_memory(data.as_slice())?;
+                        el.set_attribute("src", &image_to_base64(&img))?;
+                    }
+
+                    Ok(())
+                })],
+                ..Settings::default()
+            },
+            |c: &[u8]| output.extend_from_slice(c),
+        );
+
+        rewriter.write(html_page.as_bytes())?;
+        rewriter.end()?;
+
+        Ok(String::from_utf8(output)?)
+    }
+}
+
+fn image_to_base64(img: &DynamicImage) -> String {
+    let mut image_data: Vec<u8> = Vec::new();
+    img.write_to(&mut Cursor::new(&mut image_data), ImageOutputFormat::Png)
+        .unwrap();
+    let res_base64 = base64::encode(image_data);
+    format!("data:image/png;base64,{}", res_base64)
+}
+
+fn download_image(url: &str) -> anyhow::Result<Vec<u8>> {
+    Ok(reqwest::blocking::get(url)?.bytes()?.into())
 }

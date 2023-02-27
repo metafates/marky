@@ -1,6 +1,6 @@
 [package]
 name = "marky"
-version = "0.5.2"
+version = "0.6.0"
 edition = "2021"
 description = "Markdown Magician 🧙"
 license = "MIT"
@@ -43,3 +43,7 @@ tower = "0.4.13"
 tower-http = { version = "0.3.4", features = ["fs", "trace"] }
 minify-js = "0.4.3"
 minifier = "0.2.2"
+lol_html = "0.3.2"
+base64 = "0.13"
+image = "0.24"
+reqwest = { version = "0.11", features = ["blocking"] }

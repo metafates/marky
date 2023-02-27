@@ -1,4 +1,4 @@
-use crate::{die, error, ioutil, note, themes};
+use crate::{die, document, error, ioutil, note, themes};
 use clap::{ArgGroup, Command, Parser, ValueHint};
 use clap_complete::{Generator, Shell};
 use colored::Colorize;
@@ -59,6 +59,15 @@ pub struct Cli {
     #[arg(short = 'D', long, help = "Enable UML diagrams rendering with Mermaid")]
     pub diagrams: bool,
 
+    #[arg(
+        short = 'I',
+        long,
+        value_enum,
+        default_value_t = document::IncludeLevel::None,
+        help = "Include images into file as base64 encoded"
+    )]
+    pub include_images: document::IncludeLevel,
+
     #[arg(short = 'A', long, help = "Enable all extra renderers")]
     pub all: bool,
 
@@ -77,7 +86,7 @@ pub struct Cli {
     #[arg(
         short,
         long,
-        help = "Saves document as PDF, will auto-download headless-chrome"
+        help = "Saves document as PDF. Will auto-download headless-chrome"
     )]
     pub pdf: bool,
 }

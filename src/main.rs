@@ -54,6 +54,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         diagrams: cli.all || cli.diagrams,
         pdf: cli.pdf,
         live: cli.live,
+        include_images: cli.include_images.clone(),
     };
 
     info!("Using theme {}", options.theme.name.cyan());
