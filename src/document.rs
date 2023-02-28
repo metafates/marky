@@ -20,7 +20,6 @@ pub struct Document {
 
 #[derive(clap::ValueEnum, Clone, Copy, Debug, PartialEq)]
 pub enum IncludeLevel {
-    None,
     Local,
     Remote,
     All,
@@ -34,7 +33,8 @@ pub struct RenderOptions {
     pub diagrams: bool,
     pub pdf: bool,
     pub live: bool,
-    pub include_images: IncludeLevel,
+    pub include_images: Option<IncludeLevel>,
+    pub optimize_images: bool,
 }
 
 #[derive(Serialize)]
@@ -87,7 +87,7 @@ impl Document {
         let html = markdown::to_html_with_options(self.text.as_str(), &markdown_options)
             .expect("never errors with MDX disabled");
 
-        if self.options.include_images != IncludeLevel::None {
+        if self.options.include_images.is_some() {
             self.include_images(html).unwrap() // TODO
         } else {
             html
@@ -180,11 +180,13 @@ impl Document {
                     let src = el.get_attribute("src").expect("src was required");
 
                     let data = {
-                        let include_remote = self.options.include_images == IncludeLevel::All
-                            || self.options.include_images == IncludeLevel::Remote;
+                        let level = self.options.include_images.expect("must be not none");
 
-                        let include_local = self.options.include_images == IncludeLevel::All
-                            || self.options.include_images == IncludeLevel::Local;
+                        let include_remote =
+                            level == IncludeLevel::All || level == IncludeLevel::Remote;
+
+                        let include_local =
+                            level == IncludeLevel::All || level == IncludeLevel::Local;
 
                         let is_remote = src.starts_with("http");
 
@@ -201,9 +203,9 @@ impl Document {
                     };
 
                     if let Some(data) = data {
-                        info!("Encoding to BASE64",);
+                        info!("Encoding to base64",);
                         let img = image::load_from_memory(data.as_slice())?;
-                        el.set_attribute("src", &image_to_base64(&img))?;
+                        el.set_attribute("src", &self.image_to_base64(&img)?)?;
                     }
 
                     Ok(())
@@ -218,14 +220,23 @@ impl Document {
 
         Ok(String::from_utf8(output)?)
     }
-}
 
-fn image_to_base64(img: &DynamicImage) -> String {
-    let mut image_data: Vec<u8> = Vec::new();
-    img.write_to(&mut Cursor::new(&mut image_data), ImageOutputFormat::Png)
-        .unwrap();
-    let res_base64 = base64::encode(image_data);
-    format!("data:image/png;base64,{}", res_base64)
+    fn image_to_base64(&self, img: &DynamicImage) -> anyhow::Result<String> {
+        let mut image_data: Vec<u8> = Vec::new();
+        img.write_to(&mut Cursor::new(&mut image_data), ImageOutputFormat::Png)
+            .unwrap();
+
+        if self.options.optimize_images {
+            info!("Optimizing image");
+            match oxipng::optimize_from_memory(image_data.as_slice(), &oxipng::Options::default()) {
+                Ok(optimized) => image_data = optimized,
+                Err(e) => return Err(anyhow::Error::new(e)),
+            }
+        }
+
+        let res_base64 = base64::encode(image_data);
+        Ok(format!("data:image/png;base64,{}", res_base64))
+    }
 }
 
 fn download_image(url: &str) -> anyhow::Result<Vec<u8>> {

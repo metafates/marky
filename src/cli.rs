@@ -63,10 +63,16 @@ pub struct Cli {
         short = 'I',
         long,
         value_enum,
-        default_value_t = document::IncludeLevel::None,
         help = "Include images into file as base64 encoded"
     )]
-    pub include_images: document::IncludeLevel,
+    pub include_images: Option<document::IncludeLevel>,
+
+    #[arg(
+        short = 'z',
+        long,
+        help = "Optimize included images to make them smaller"
+    )]
+    pub optimize_images: bool,
 
     #[arg(short = 'A', long, help = "Enable all extra renderers")]
     pub all: bool,

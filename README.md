@@ -48,11 +48,13 @@ Enable extensions
 marky doc.md --math --diagrams --highlight
 ```
 
-Include local images as base64 encoded (beta)
+Include local images as base64 encoded and compress them (beta)
 
 ```bash
-# default: none, possible values: none, local, remote, all
-marky doc.md --include-images local
+# possible values: local, remote, all
+marky doc.md --include-images "local" --optimize-images
+# or short
+marky doc.md -zI local
 ```
 
 Select and use a different theme with fzf
@@ -80,30 +82,54 @@ cargo install marky
 ## Help
 
 ```
+Markdown Magician 🧙
+
 Usage: marky [OPTIONS] [PATH]
 
 Arguments:
   [PATH]  Read input from file
 
 Options:
-      --completion <GENERATOR>  [possible values: bash, elvish, fish, powershell, zsh]
-  -t, --theme <THEME>           Theme to use
-      --string <STRING>         Read input from string
-      --themes                  List available themes
-      --where-config            Print config path
-  -o, --out <OUT>               Output file
-      --stdout                  Output to stdout
-  -H, --highlight               Enable syntax highligting with highlight.js
-  -M, --math                    Enable math rendering with KaTeX
-  -D, --diagrams                Enable UML diagrams rendering with Mermaid
-  -A, --all                     Enable all extra renderers
-  -w, --watch                   Recompile file on save
-  -l, --live                    Live preview in the browser
-      --port <PORT>             Port of the live server [default: 8080]
-  -O, --open                    Open output file in the default app
-  -p, --pdf                     Saves document as PDF, will auto-download headless-chrome
-  -h, --help                    Print help
-  -V, --version                 Print version
+      --completion <GENERATOR>
+          [possible values: bash, elvish, fish, powershell, zsh]
+  -t, --theme <THEME>
+          Theme to use
+      --string <STRING>
+          Read input from string
+      --themes
+          List available themes
+      --where-config
+          Print config path
+  -o, --out <OUT>
+          Output file
+      --stdout
+          Output to stdout
+  -H, --highlight
+          Enable syntax highligting with highlight.js
+  -M, --math
+          Enable math rendering with KaTeX
+  -D, --diagrams
+          Enable UML diagrams rendering with Mermaid
+  -I, --include-images <INCLUDE_IMAGES>
+          Include images into file as base64 encoded [possible values: local, remote, all]
+  -z, --optimize-images
+          Optimize included images to make them smaller
+  -A, --all
+          Enable all extra renderers
+  -w, --watch
+          Recompile file on save
+  -l, --live
+          Live preview in the browser
+      --port <PORT>
+          Port of the live server [default: 8080]
+  -O, --open
+          Open output file in the default app
+  -p, --pdf
+          Saves document as PDF. Will auto-download headless-chrome
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 
 ## Build
@@ -136,4 +162,4 @@ marky README.md --theme retro
 
 See `marky --themes` to show all available themes.
 
-You can also your own themes, but it's not documented yet... 😴
+You can also add your own themes, but it's not documented yet... 😴

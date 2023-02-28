@@ -1,13 +1,13 @@
 [package]
 name = "marky"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 description = "Markdown Magician 🧙"
 license = "MIT"
 repository = "https://github.com/metafates/marky"
 authors = ["metafates"]
 categories = ["command-line-utilities", "parsing", "visualization"]
-keywords = ["markdown", "html", "pdf", "cli"]
+keywords = ["markdown", "html", "pdf", "cli", "image"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -47,3 +47,4 @@ lol_html = "0.3.2"
 base64 = "0.13"
 image = "0.24"
 reqwest = { version = "0.11", features = ["blocking"] }
+oxipng = "8.0.0"
