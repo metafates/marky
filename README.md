@@ -5,13 +5,9 @@ Markdown Magician 🧙
 **Features**
 
 - Hot reload previewing 🔥
-- Conversion to **HTML** / **PDF**  🏭
+- Conversion to **HTML***  🏭
 - Themes! ✨
 - Extensions - Math, diagrams, syntax-highlighting 🧩
-
-> **Note** When converting to PDF it will automatically download a suitable
-> [headless chrome](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md) binary if one is not present on your system.
-> Everything is automated!
 
 <!--toc:start-->
 - [Examples](#examples)
@@ -27,12 +23,6 @@ Convert `doc.md` to `doc.html`
 
 ```bash
 marky doc.md
-```
-
-Convert to PDF
-
-```bash
-marky doc.md --pdf
 ```
 
 Start a local preview server with hot-reload 
@@ -124,8 +114,6 @@ Options:
           Port of the live server [default: 8080]
   -O, --open
           Open output file in the default app
-  -p, --pdf
-          Saves document as PDF. Will auto-download headless-chrome
   -h, --help
           Print help
   -V, --version

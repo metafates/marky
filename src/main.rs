@@ -8,7 +8,6 @@ mod included;
 mod ioutil;
 mod log;
 mod paths;
-mod pdf;
 mod server;
 mod service;
 mod themes;
@@ -52,7 +51,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         math: cli.all || cli.math,
         highlight: cli.all || cli.highlight,
         diagrams: cli.all || cli.diagrams,
-        pdf: cli.pdf,
         live: cli.live,
         include_images: cli.include_images,
         optimize_images: cli.optimize_images,
@@ -72,7 +70,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let out = {
-        let auto_extension = if cli.pdf { "pdf" } else { "html" };
+        let auto_extension = "html";
 
         if let Some(out) = &cli.out {
             out.clone()

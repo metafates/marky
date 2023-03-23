@@ -88,13 +88,6 @@ pub struct Cli {
 
     #[arg(short = 'O', long, help = "Open output file in the default app")]
     pub open: bool,
-
-    #[arg(
-        short,
-        long,
-        help = "Saves document as PDF. Will auto-download headless-chrome"
-    )]
-    pub pdf: bool,
 }
 
 pub fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {

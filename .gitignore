@@ -30,3 +30,9 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Devenv
+.devenv*
+devenv.local.nix
+.direnv*
+.pre-commit-config.yaml

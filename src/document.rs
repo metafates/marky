@@ -10,7 +10,6 @@ use serde::Serialize;
 use std::io::Cursor;
 
 use crate::included::{TEMPLATES_DIR, VENDOR_DIR};
-use crate::pdf;
 use crate::themes::Theme;
 
 pub struct Document {
@@ -31,7 +30,6 @@ pub struct RenderOptions {
     pub highlight: bool,
     pub math: bool,
     pub diagrams: bool,
-    pub pdf: bool,
     pub live: bool,
     pub include_images: Option<IncludeLevel>,
     pub optimize_images: bool,
@@ -135,13 +133,7 @@ impl Document {
             },
         )?;
 
-        let bytes: Vec<u8> = if self.options.pdf {
-            pdf::html_to_pdf(html.as_str())?
-        } else {
-            html.into_bytes()
-        };
-
-        Ok(bytes)
+        Ok(html.into_bytes())
     }
 
     pub fn title(&self) -> Option<String> {
