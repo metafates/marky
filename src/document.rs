@@ -7,7 +7,9 @@ use handlebars::Handlebars;
 use image::{DynamicImage, ImageOutputFormat};
 use lol_html::{element, HtmlRewriter, Settings};
 use serde::Serialize;
+use std::ffi::OsStr;
 use std::io::Cursor;
+use std::path::Path;
 
 use crate::included::{TEMPLATES_DIR, VENDOR_DIR};
 use crate::themes::Theme;
@@ -184,10 +186,31 @@ impl Document {
 
                         if is_remote && include_remote {
                             info!("Downloading {}", src);
-                            Some(download_image(src.as_str())?)
+
+                            if src.ends_with(".svg") {
+                                let svg_data = download_image(src.as_str())?;
+                                let base64_svg = base64::encode(&svg_data);
+                                el.set_attribute(
+                                    "src",
+                                    &format!("data:image/svg+xml;base64,{}", base64_svg),
+                                )?;
+                                None
+                            } else {
+                                Some(download_image(src.as_str())?)
+                            }
                         } else if !is_remote && include_local {
                             info!("Reading {}", src);
-                            Some(fs::read(src)?)
+
+                            let path = Path::new(&src);
+                            let is_svg = path.extension() == Some(OsStr::new("svg"));
+
+                            if is_svg {
+                                let svg_data = self.svg_to_base64(path)?;
+                                el.set_attribute("src", &svg_data)?;
+                                None
+                            } else {
+                                Some(fs::read(src)?)
+                            }
                         } else {
                             info!("Skipping {}", src);
                             None
@@ -228,6 +251,13 @@ impl Document {
 
         let res_base64 = base64::encode(image_data);
         Ok(format!("data:image/png;base64,{}", res_base64))
+    }
+
+    fn svg_to_base64(&self, path: &Path) -> anyhow::Result<String> {
+        let svg_data = fs::read(path)?;
+        let base64_svg = base64::encode(svg_data);
+        let svg_data_uri = format!("data:image/svg+xml;base64,{}", base64_svg);
+        Ok(svg_data_uri)
     }
 }
 
